@@ -21,20 +21,23 @@ public class CameraMovement : MonoBehaviour
     public float rotationSpeed = 10f;
 
 
-    public float minVerticalAngle = 70f; 
-    public float maxVerticalAngle = 90f;  
+    public float minVerticalAngle = 50f; 
+    public float maxVerticalAngle = 85f;  
     public float minHorizontalAngle = -90.0f; 
     public float maxHorizontalAngle = 90.0f;
 
     private bool isCameraMoveButtonHeld = false;
-    private bool canRotate = false;
+    private bool isRotating = false;
 
-    private float currentVerticalAngle = 90f;
+    private float currentVerticalAngle = 55f;
     private float currentHorizontalAngle = 0.0f;
+
+    private bool shouldZoom = false;
 
     private void Start()
     {
         camera = Camera.main;
+
     }
 
 
@@ -42,32 +45,35 @@ public class CameraMovement : MonoBehaviour
     void LateUpdate()
     {
         toggleCameraMovement();
+        toggleZoom();
 
         if (isCameraMoveButtonHeld)
         {
             MoveCameraWhenCameraMoveDown();
 
         }
-        else
+        else if (!isRotating)
         {
             ScrollCameraWhenMouseHitsEdge();
         }
 
+    
         handleZoom();
+        
         handleRotation();
     }
 
     private void handleRotation()
     {
-        if (Input.GetButtonDown(Controls.Rotation))
+        if (Input.GetButtonDown(KeyMappings.MouseWheel))
         {
-            canRotate = true;
+            isRotating = true;
         }
-        else if (Input.GetButtonUp(Controls.Rotation)) { 
-            canRotate = false; 
+        else if (Input.GetButtonUp(KeyMappings.MouseWheel)) { 
+            isRotating = false; 
         }
 
-        if (canRotate)
+        if (isRotating)
         {
             var x = Input.GetAxis("Mouse X");
             var y = Input.GetAxis("Mouse Y");
@@ -90,38 +96,57 @@ public class CameraMovement : MonoBehaviour
 
     private void handleZoom()
     {
-        Vector3 cameraPosition = camera.transform.position;
-
-        // can zoom in
-        if (cameraPosition.y < maxZoom)
+        if (shouldZoom)
         {
-            cameraPosition.y += -1 * Input.mouseScrollDelta.y * zoomSpeed;
+            Vector3 cameraPosition = camera.transform.position;
+
+            // can zoom in
+            if (cameraPosition.y < maxZoom)
+            {
+                cameraPosition.y += -1 * Input.mouseScrollDelta.y * zoomSpeed;
+            }
+
+            // can zoom out
+            else if (cameraPosition.y > minZoom)
+            {
+                cameraPosition.y += Input.mouseScrollDelta.y * zoomSpeed;
+            }
+
+            // change only if new position is bounded
+            if (cameraPosition.y > minZoom && cameraPosition.y < maxZoom)
+            {
+                camera.transform.position = cameraPosition;
+            }
         }
 
-        // can zoom out
-        else if (cameraPosition.y > minZoom) {
-            cameraPosition.y += Input.mouseScrollDelta.y * zoomSpeed;
-        }
-
-        // change only if new position is bounded
-        if (cameraPosition.y > minZoom && cameraPosition.y < maxZoom)
-        {
-            camera.transform.position = cameraPosition;
-        }
     }
 
     private void toggleCameraMovement()
     {
-        if (Input.GetButtonDown(Controls.CameraMove))
+        if (Input.GetButtonDown(KeyMappings.RightClick))
         {
             isCameraMoveButtonHeld = true;
         }
 
-        if (Input.GetButtonUp(Controls.CameraMove))
+        if (Input.GetButtonUp(KeyMappings.RightClick))
         {
             isCameraMoveButtonHeld = false;
         }
     }
+
+    private void toggleZoom()
+    {
+        if (Input.GetButtonDown(KeyMappings.Control))
+        {
+            shouldZoom = true;
+        }
+
+        if (Input.GetButtonUp(KeyMappings.Control))
+        {
+            shouldZoom = false;
+        }
+    }
+
 
     private void MoveCameraWhenCameraMoveDown()
     {
