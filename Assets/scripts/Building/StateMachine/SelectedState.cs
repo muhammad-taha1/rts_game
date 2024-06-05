@@ -21,11 +21,15 @@ public class SelectedState : IState
 
     private bool isPlacementValid = true;
 
-    public SelectedState(GameObject obj, BuildingStateMachine stateMachine, GameObject pointer, LayerMask terrainLayer)
+    private Renderer _renderer;
+
+    private GameObject constructionScaffold;
+
+    public SelectedState(GameObject obj, Renderer renderer, BuildingStateMachine stateMachine, GameObject pointer, LayerMask terrainLayer, GameObject constructionScaffold)
     {
         _object = obj;
         _stateMachine = stateMachine;
-        Renderer renderer = _object.GetComponent<Renderer>();
+        this._renderer = renderer;
         _originalMaterial = new Material(renderer.material);
 
 
@@ -63,16 +67,19 @@ public class SelectedState : IState
         _pointer = pointer;
 
         _terrainLayer = terrainLayer;
+        this.constructionScaffold = constructionScaffold;
     }
 
     public void Enter()
     {
+        constructionScaffold.gameObject.SetActive(false);
         SetTransparency(_translucentMaterial);
     }
 
     public void Exit()
     {
         SetTransparency(_originalMaterial);
+        EventManager.TriggerEvent<BuildingPlacedEvent>();
     }
 
     public void Update()
@@ -92,7 +99,7 @@ public class SelectedState : IState
 
         if (isPlacementValid && Input.GetButtonDown(KeyMappings.LeftClick))
         {
-            _stateMachine.ChangeState(BuildingState.Placed);
+            _stateMachine.ChangeState(BuildingState.UnderConstruction);
         }
         else if (Input.GetKeyDown(KeyCode.B) || Input.GetButtonDown(KeyMappings.RightClick))
         {
@@ -149,7 +156,7 @@ public class SelectedState : IState
         //}
 
    
-        var yPosition = highestY + 1;
+        var yPosition = highestY;
 
         //Debug.Log(yPosition);
         _object.gameObject.transform.position = new Vector3(position.x, yPosition, position.z);
@@ -189,8 +196,8 @@ public class SelectedState : IState
         _object.gameObject.GetComponent<BoxCollider>();
 
 
-        Debug.Log("is in contact: " + _isInContact);
-        Debug.Log("anglePlacementSatisfiedt: " + anglePlacementSatisfied);
+        //Debug.Log("is in contact: " + _isInContact);
+        //Debug.Log("anglePlacementSatisfiedt: " + anglePlacementSatisfied);
 
         // building can be placed if angle req is met object not in contact with anything else on sides
         return anglePlacementSatisfied && !_isInContact;
@@ -199,8 +206,7 @@ public class SelectedState : IState
 
     private void SetTransparency(Material material)
     {
-        Renderer renderer = _object.GetComponent<Renderer>();
-        renderer.material = material;
+        _renderer.material = material;
         //_object.GetComponent<Renderer>().material.color = color;
     }
 

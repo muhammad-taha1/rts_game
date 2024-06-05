@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class BuildingController : MonoBehaviour
 {
-    public GameObject buildingPrefab;
+    public List<BuildingPrefabMap> buildingPrefabMapList;
 
 
     public GameObject pointer;
@@ -13,24 +13,26 @@ public class BuildingController : MonoBehaviour
     private GameObject selectedBuilding = null;
 
 
-    // Update is called once per frame
-    void LateUpdate()
+    public void selectBuilding(BuildingType building)
     {
 
-        // select/un-select building
-        if (Input.GetKeyDown(KeyCode.B))
-        {
-            if (selectedBuilding == null) {
-                var position = pointer.gameObject.transform.position;
-                selectedBuilding = Instantiate(buildingPrefab, new Vector3(position.x, 1, position.z), Quaternion.identity);
-                selectedBuilding.GetComponent<BuildingStateMachine>().Initialize(selectedBuilding);
-            }
-
-            else
+        if (selectedBuilding == null) {
+            BuildingPrefabMap buildingMap = buildingPrefabMapList.Find(map => map.BuildingType == building);
+            if (buildingMap == null)
             {
-                selectedBuilding = null;
+                Debug.LogError("building not found for type: " + building);
             }
 
+            var position = pointer.gameObject.transform.position;
+            selectedBuilding = Instantiate(buildingMap.BuildingPrefab, new Vector3(position.x, 0f, position.z), Quaternion.identity);
+            selectedBuilding.GetComponent<BuildingStateMachine>().pointer = pointer;
+            selectedBuilding.GetComponent<BuildingStateMachine>().Initialize(selectedBuilding);
         }
+
+        else
+        {
+            selectedBuilding = null;
+        }
+
     }
 }

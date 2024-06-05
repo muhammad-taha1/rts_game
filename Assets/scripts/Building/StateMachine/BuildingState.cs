@@ -5,5 +5,6 @@ using UnityEngine;
 public enum BuildingState
 {
     Selected,
-    Placed
+    UnderConstruction,
+    Built
 }
